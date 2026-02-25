@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.gnome.Inspyr
+Exec=@bindir@/inspyr --gapplication-service

@@ -1,0 +1,6 @@
+#[allow(dead_code)]
+pub static VERSION: &str = @VERSION@;
+pub static GETTEXT_PACKAGE: &str = @GETTEXT_PACKAGE@;
+pub static LOCALEDIR: &str = @LOCALEDIR@;
+#[allow(dead_code)]
+pub static PKGDATADIR: &str = @PKGDATADIR@;
