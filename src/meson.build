@@ -55,3 +55,20 @@ cargo_build = custom_target(
     cargo_opt, '&&', 'cp', 'src' / rust_target / meson.project_name(), '@OUTPUT@',
   ]
 )
+
+# Build database-daemon binary
+database_daemon_build = custom_target(
+  'cargo-build-database-daemon',
+  build_by_default: true,
+  build_always_stale: true,
+  output: 'database-daemon',
+  console: true,
+  install: true,
+  install_dir: get_option('bindir'),
+  command: [
+    'env', cargo_env,
+    cargo_bin, 'build', '--bin', 'database-daemon',
+    cargo_opt, '&&', 'cp', 'src' / rust_target / 'database-daemon', '@OUTPUT@',
+  ],
+  depends: cargo_build,
+)
