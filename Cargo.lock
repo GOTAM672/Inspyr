@@ -532,6 +532,7 @@ dependencies = [
  "libadwaita",
  "notify",
  "rusqlite",
+ "walkdir",
 ]
 
 [[package]]

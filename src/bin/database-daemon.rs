@@ -18,7 +18,7 @@ fn main() {
         println!("Database is not empty...");
     }
 
-    // FileWatcher::start_watcher(&db.get_scan_dir()).expect("Failed to start watcher");
+    FileWatcher::start_watcher(&db.get_scan_dir()).unwrap();
 
     // Run daemon loop
     main_loop.run();

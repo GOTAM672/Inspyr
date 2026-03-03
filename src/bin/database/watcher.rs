@@ -1,29 +1,109 @@
-use notify::{Event, RecursiveMode, Result, Watcher};
-use std::{path::Path, sync::mpsc};
+use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
+use std::{
+    path::{Path, PathBuf},
+    sync::mpsc,
+};
+use walkdir::{DirEntry, WalkDir};
 
 pub struct FileWatcher;
 
 impl FileWatcher {
     pub fn start_watcher(watch_dir: &Path) -> Result<()> {
         let (tx, rx) = mpsc::channel::<Result<Event>>();
-    
-        // Use recommended_watcher() to automatically select the best implementation
-        // for your platform. The `EventHandler` passed to this constructor can be a
-        // closure, a `std::sync::mpsc::Sender`, a `crossbeam_channel::Sender`, or
-        // another type the trait is implemented for.
+
         let mut watcher = notify::recommended_watcher(tx)?;
-    
-        // Add a path to be watched. All files and directories at that path and
-        // below will be monitored for changes.
-        watcher.watch(watch_dir, RecursiveMode::Recursive)?;
-        // Block forever, printing out events as they come in
-        for res in rx {
-            match res {
-                Ok(event) => println!("event: {:?}", event),
-                Err(e) => println!("watch error: {:?}", e),
+
+        println!("Starting watcher on: {}", watch_dir.display());
+
+        // Manually walk directories
+        for entry in WalkDir::new(watch_dir)
+            .follow_links(false)
+            .into_iter()
+            .filter_entry(|e| !is_hidden_dir(e)) // Skip hidden directories completely
+            .filter_map(|e| e.ok())
+        {
+            let path = entry.path();
+
+            if path.is_dir() {
+                if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+                    eprintln!(
+                        "Skipping directory (watch error): {} -> {:?}",
+                        path.display(),
+                        e
+                    );
+                }
             }
         }
-    
+
+        println!("Watching started successfully.");
+
+        // Event loop
+        for res in rx {
+            match res {
+                Ok(event) => handle_event(event),
+                Err(e) => eprintln!("Watch error: {:?}", e),
+            }
+        }
+
         Ok(())
+    }
+}
+
+//
+// 🔎 Skip hidden directories entirely (including their contents)
+//
+fn is_hidden_dir(entry: &DirEntry) -> bool {
+    // Never skip the root directory itself
+    if entry.depth() == 0 {
+        return false;
+    }
+
+    if entry.file_type().is_dir() {
+        entry
+            .file_name()
+            .to_str()
+            .map(|name| name.starts_with('.'))
+            .unwrap_or(false)
+    } else {
+        false
+    }
+}
+
+//
+// 🔎 Skip hidden files in events
+//
+fn is_hidden_path(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .map(|name| name.starts_with('.'))
+        .unwrap_or(false)
+}
+
+//
+// 📦 Handle filesystem events safely
+//
+fn handle_event(event: Event) {
+    for path in event.paths {
+        if is_hidden_path(&path) {
+            continue;
+        }
+
+        match event.kind {
+            EventKind::Create(_) => {
+                println!("Create Event: {:?} -> {}", event.kind, path.display());
+            }
+            EventKind::Modify(_) => {
+                println!("Modify Event: {:?} -> {}", event.kind, path.display());
+            }
+            EventKind::Remove(_) => {
+                println!("Remove Event: {:?} -> {}", event.kind, path.display());
+            }
+            EventKind::Other => {
+                println!("Other Event: {:?} -> {}", event.kind, path.display());
+            }
+            notify::EventKind::Any | notify::EventKind::Access(_) => {
+                
+            }
+        }
     }
 }
