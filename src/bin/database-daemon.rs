@@ -1,8 +1,7 @@
 mod database;
 
 use gtk::glib::MainLoop;
-
-use self::database::Database;
+use self::database::{Database, FileWatcher};
 
 fn main() {
     let main_loop = MainLoop::new(None, false);
@@ -13,7 +12,13 @@ fn main() {
 
     println!("Database initialized successfully");
     println!("Database path: {:?}", db.get_db_path());
-    println!("Home directory: {:?}", db.get_home_dir());
+    println!("Scan directory: {:?}", db.get_scan_dir());
+
+    if !db.is_database_empty() {
+        println!("Database is not empty...");
+    }
+
+    // FileWatcher::start_watcher(&db.get_scan_dir()).expect("Failed to start watcher");
 
     // Run daemon loop
     main_loop.run();

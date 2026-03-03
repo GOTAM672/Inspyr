@@ -6,21 +6,18 @@ use std::fs;
 #[derive(Debug)]
 pub struct Database {
     conn: Connection,
-    home_dir: PathBuf,
+    scan_dir: PathBuf,
     db_path: PathBuf,
 }
 
-// Image file extensions
-const IMAGE_EXTENSIONS: &[&str] = &["jpg", "jpeg", "png"];
-
 impl Database {
     pub fn init() -> Result<Self> {
-        let home_dir = std::env::var("HOME")
+        let scan_dir = std::env::var("HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|_| PathBuf::from("/tmp"));
 
         // Create .inspyr directory in home if it doesn't exist
-        let db_dir = home_dir.join(".inspyr");
+        let db_dir = scan_dir.join(".inspyr");
         fs::create_dir_all(&db_dir)
             .map_err(|e| Error::ToSqlConversionFailure(Box::new(e)))?;
         
@@ -28,7 +25,7 @@ impl Database {
         println!("Database path: {:?}", db_path);
         let conn = Connection::open(&db_path)?;
         
-        let db = Database { conn, home_dir, db_path };
+        let db = Database { conn, scan_dir, db_path };
 
         db.create_tables()?;
 
@@ -45,11 +42,24 @@ impl Database {
         Ok(())
     }
 
+    pub fn is_database_empty(&self) -> bool {
+        // Check if the images table has any rows
+        let count: i64 = self.conn
+            .query_row("SELECT COUNT(*) FROM images", [], |row| row.get(0))
+            .unwrap_or(0);
+        
+        count == 0
+    }
+
+    pub(crate) fn get_conn(&self) -> &Connection {
+        &self.conn
+    }
+
     pub fn get_db_path(&self) -> PathBuf {
         self.db_path.clone()
     }
 
-    pub fn get_home_dir(&self) -> PathBuf {
-        self.home_dir.clone()
+    pub fn get_scan_dir(&self) -> PathBuf {
+        self.scan_dir.clone()
     }
 }
