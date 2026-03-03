@@ -1,0 +1,21 @@
+[package]
+name = "inspyr-ui"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "inspyr"
+path = "src/main.rs"
+
+[dependencies]
+inspyr-database = { path = "../inspyr-database" }
+gettext-rs = { version = "0.7", features = ["gettext-system"] }
+gtk = { version = "0.9", package = "gtk4", features = ["gnome_47"] }
+
+[dependencies.adw]
+package = "libadwaita"
+version = "0.7"
+features = ["v1_6"]
+
+[build-dependencies]
+# none; build.rs uses std and env

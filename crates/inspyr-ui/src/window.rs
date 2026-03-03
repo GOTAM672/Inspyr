@@ -28,7 +28,6 @@ mod imp {
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/org/gnome/Inspyr/window.ui")]
     pub struct InspyrWindow {
-        // Template widgets
         #[template_child]
         pub label: TemplateChild<gtk::Label>,
     }
@@ -57,7 +56,8 @@ mod imp {
 
 glib::wrapper! {
     pub struct InspyrWindow(ObjectSubclass<imp::InspyrWindow>)
-        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,        @implements gio::ActionGroup, gio::ActionMap;
+        @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
+        @implements gio::ActionGroup, gio::ActionMap;
 }
 
 impl InspyrWindow {

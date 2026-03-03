@@ -15,11 +15,10 @@ impl FileWatcher {
 
         println!("Starting watcher on: {}", watch_dir.display());
 
-        // Manually walk directories
         for entry in WalkDir::new(watch_dir)
             .follow_links(false)
             .into_iter()
-            .filter_entry(|e| !is_hidden_dir(e)) // Skip hidden directories completely
+            .filter_entry(|e| !is_hidden_dir(e))
             .filter_map(|e| e.ok())
         {
             let path = entry.path();
@@ -37,7 +36,6 @@ impl FileWatcher {
 
         println!("Watching started successfully.");
 
-        // Event loop
         for res in rx {
             match res {
                 Ok(event) => handle_event(event),
@@ -49,11 +47,7 @@ impl FileWatcher {
     }
 }
 
-//
-// 🔎 Skip hidden directories entirely (including their contents)
-//
 fn is_hidden_dir(entry: &DirEntry) -> bool {
-    // Never skip the root directory itself
     if entry.depth() == 0 {
         return false;
     }
@@ -69,9 +63,6 @@ fn is_hidden_dir(entry: &DirEntry) -> bool {
     }
 }
 
-//
-// 🔎 Skip hidden files in events
-//
 fn is_hidden_path(path: &Path) -> bool {
     path.file_name()
         .and_then(|n| n.to_str())
@@ -79,9 +70,6 @@ fn is_hidden_path(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-//
-// 📦 Handle filesystem events safely
-//
 fn handle_event(event: Event) {
     for path in event.paths {
         if is_hidden_path(&path) {
@@ -101,9 +89,7 @@ fn handle_event(event: Event) {
             EventKind::Other => {
                 println!("Other Event: {:?} -> {}", event.kind, path.display());
             }
-            notify::EventKind::Any | notify::EventKind::Access(_) => {
-                
-            }
+            notify::EventKind::Any | notify::EventKind::Access(_) => {}
         }
     }
 }

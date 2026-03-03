@@ -49,19 +49,12 @@ mod imp {
     }
 
     impl ApplicationImpl for InspyrApplication {
-        // We connect to the activate callback to create a window when the application
-        // has been launched. Additionally, this callback notifies us when the user
-        // tries to launch a "second instance" of the application. When they try
-        // to do that, we'll just present any existing window.
         fn activate(&self) {
             let application = self.obj();
-            // Get the current window or create one if necessary
             let window = application.active_window().unwrap_or_else(|| {
                 let window = InspyrWindow::new(&*application);
                 window.upcast()
             });
-
-            // Ask the window manager/compositor to present the window
             window.present();
         }
     }
@@ -103,7 +96,6 @@ impl InspyrApplication {
             .developer_name("Gotam Gorabh")
             .version(VERSION)
             .developers(vec!["Gotam Gorabh"])
-            // Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
             .translator_credits(&gettext("translator-credits"))
             .copyright("© 2026 Gotam Gorabh")
             .build();

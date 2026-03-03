@@ -1,0 +1,12 @@
+[package]
+name = "inspyr-database"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "inspyr_database"
+path = "src/lib.rs"
+
+[dependencies]
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+walkdir = "2.5.0"

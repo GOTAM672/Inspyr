@@ -1,7 +1,9 @@
-mod database;
+mod watcher;
 
-use gtk::glib::MainLoop;
-use self::database::{Database, FileWatcher};
+use glib::MainLoop;
+use inspyr_database::Database;
+
+use crate::watcher::FileWatcher;
 
 fn main() {
     let main_loop = MainLoop::new(None, false);
@@ -20,6 +22,5 @@ fn main() {
 
     FileWatcher::start_watcher(&db.get_scan_dir()).unwrap();
 
-    // Run daemon loop
     main_loop.run();
 }

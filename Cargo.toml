@@ -1,16 +1,7 @@
-[package]
-name = "inspyr"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-gettext-rs = { version = "0.7", features = ["gettext-system"] }
-gtk = { version = "0.9", package = "gtk4", features = ["gnome_47"] }
-rusqlite = { version = "0.38.0", features = ["bundled"] }
-notify = "8.2.0"
-walkdir = "2.5.0"
-
-[dependencies.adw]
-package = "libadwaita"
-version = "0.7"
-features = ["v1_6"]
+[workspace]
+resolver = "2"
+members = [
+    "crates/inspyr-database",
+    "crates/inspyr-ui",
+    "crates/inspyr-daemon",
+]
