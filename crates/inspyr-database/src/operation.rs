@@ -139,6 +139,12 @@ impl<'a> DatabaseOperations<'a> {
         Ok(n > 0)
     }
 
+    pub fn delete_all(&self) -> Result<()> {
+        let conn = self.db.get_conn();
+        conn.execute("DELETE FROM images", [])?;
+        Ok(())
+    }
+
     // ---------- Read / Query ----------
 
     /// List images with optional pagination.

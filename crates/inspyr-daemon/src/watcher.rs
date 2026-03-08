@@ -1,6 +1,6 @@
 use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
 use std::{
-    path::{Path, PathBuf},
+    path::Path,
     sync::mpsc,
 };
 use walkdir::{DirEntry, WalkDir};

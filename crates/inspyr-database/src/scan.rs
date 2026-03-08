@@ -20,7 +20,7 @@ impl<'a> Scan<'a> {
     }
 
     /// Walk the directory tree, skip hidden files/dirs, and insert image files into the database.
-    pub fn scan_directory(&self, path: &Path) -> Result<()> {
+    pub fn initial_scan(&self, path: &Path) -> Result<()> {
         let ops = DatabaseOperations::new(self.db);
         for entry in WalkDir::new(path)
             .into_iter()
@@ -43,17 +43,11 @@ impl<'a> Scan<'a> {
         Ok(())
     }
 
-    // pub fn re_scan_directory(&self, path: &Path) -> Result<()> {
-    //     for entry in WalkDir::new(path) {
-    //         let entry = entry.unwrap();
-    //         println!("{}", entry.path().display());
-    //     }
-    //     Ok(())
-    // }
-
-    // fn is_directory(path: &Path) -> bool {
-    //     path.is_dir()
-    // }
+    pub fn re_scan(&self, path: &Path) -> Result<()> {
+        let ops = DatabaseOperations::new(self.db);
+        ops.delete_all()?;
+        self.initial_scan(path)
+    }
 
 
     /// Skip hidden files and directories (name starts with `.`). Used so we don't descend into hidden dirs.
@@ -61,28 +55,6 @@ impl<'a> Scan<'a> {
         entry
             .file_name()
             .to_str()
-            .map(|name| name.starts_with('.'))
-            .unwrap_or(false)
-    }
-
-    fn is_hidden_dir(entry: &DirEntry) -> bool {
-        if entry.depth() == 0 {
-            return false;
-        }
-        if entry.file_type().is_dir() {
-            entry
-                .file_name()
-                .to_str()
-                .map(|name| name.starts_with('.'))
-                .unwrap_or(false)
-        } else {
-            false
-        }
-    }
-
-    fn is_hidden_path(path: &Path) -> bool {
-        path.file_name()
-            .and_then(|n| n.to_str())
             .map(|name| name.starts_with('.'))
             .unwrap_or(false)
     }
