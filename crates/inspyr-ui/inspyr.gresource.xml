@@ -3,5 +3,7 @@
   <gresource prefix="/org/gnome/Inspyr">
     <file preprocess="xml-stripblanks">window.ui</file>
     <file preprocess="xml-stripblanks">shortcuts-dialog.ui</file>
+    <file preprocess="xml-stripblanks">photo-item.ui</file>
+    <file preprocess="xml-stripblanks">photo-page.ui</file>
   </gresource>
 </gresources>

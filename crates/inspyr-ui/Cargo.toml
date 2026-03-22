@@ -10,6 +10,7 @@ path = "src/main.rs"
 [dependencies]
 inspyr-database = { path = "../inspyr-database" }
 gettext-rs = { version = "0.7", features = ["gettext-system"] }
+glib-macros = "0.21"
 gtk = { version = "0.9", package = "gtk4", features = ["gnome_47"] }
 
 [dependencies.adw]

@@ -22,14 +22,16 @@ use gtk::prelude::*;
 use adw::subclass::prelude::*;
 use gtk::{gio, glib};
 
+use crate::photo_page::InspyrPhotoPage;
+
 mod imp {
     use super::*;
 
     #[derive(Debug, Default, gtk::CompositeTemplate)]
     #[template(resource = "/org/gnome/Inspyr/window.ui")]
     pub struct InspyrWindow {
-        #[template_child]
-        pub label: TemplateChild<gtk::Label>,
+        // #[template_child]
+        // pub label: TemplateChild<gtk::Label>,
     }
 
     #[glib::object_subclass]
@@ -39,6 +41,8 @@ mod imp {
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
+            // Register child widget types so the template can instantiate them
+            InspyrPhotoPage::static_type();
             klass.bind_template();
         }
 

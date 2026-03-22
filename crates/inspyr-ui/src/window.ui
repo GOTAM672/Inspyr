@@ -6,31 +6,124 @@
     <property name="title" translatable="yes">Inspyr</property>
     <property name="default-width">800</property>
     <property name="default-height">600</property>
+
+    <child>
+      <object class="AdwBreakpoint">
+        <condition>max-width: 550sp</condition>
+        <setter object="main_header" property="title-widget"/>
+        <setter object="sidebar_switcher" property="reveal">True</setter>
+      </object>
+    </child>
+
     <property name="content">
       <object class="AdwToolbarView">
         <child type="top">
-          <object class="AdwHeaderBar">
+          <object class="AdwHeaderBar" id="main_header">
+            <property name="hexpand">True</property>
+            <property name="show-end-title-buttons">True</property>
+            <child type="start">
+              <object class="GtkToggleButton" id="search_button">
+                <property name="icon_name">edit-find-symbolic</property>
+                <!-- <property name="active" bind-source="search_bar" bind-property="search-mode-enabled" bind-flags="sync-create|bidirectional"/> -->
+                <property name="tooltip-text" translatable="yes">Search</property>
+              </object>
+            </child>
             <child type="end">
               <object class="GtkMenuButton">
                 <property name="primary">True</property>
-                <property name="icon-name">open-menu-symbolic</property>
+                <property name="icon_name">open-menu-symbolic</property>
                 <property name="tooltip-text" translatable="yes">Main Menu</property>
-                <property name="menu-model">primary_menu</property>
+                <property name="menu_model">primary_menu</property>
+              </object>
+            </child>
+            <property name="title-widget">
+              <object class="AdwViewSwitcher">
+                <property name="stack">stack_main</property>
+                <property name="policy">wide</property>
+              </object>
+            </property>
+          </object>
+        </child>
+
+        <child type="top">
+          <object class="GtkSearchBar" id="search_bar">
+            <child>
+              <object class="AdwClamp">
+                <property name="maximum_size">500</property>
+                <property name="tightening_threshold">500</property>
+                <child>
+                  <object class="GtkSearchEntry" id="entry_search">
+                    <property name="placeholder_text" translatable="yes">Search</property>
+                  </object>
+                </child>
               </object>
             </child>
           </object>
         </child>
+
         <property name="content">
-          <object class="GtkLabel" id="label">
-            <property name="label" translatable="yes">Hello, World!</property>
-            <style>
-              <class name="title-1"/>
-            </style>
+          <object class="AdwViewStack" id="stack_main">
+            <property name="vexpand">True</property>
+            <child>
+              <object class="AdwViewStackPage">
+                <property name="name">photos</property>
+                <property name="title" translatable="yes">_Photos</property>
+                <property name="use-underline">True</property>
+                <property name="icon-name">folder-pictures-symbolic</property>
+                <property name="child">
+                  <object class="InspyrPhotoPage"/>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwViewStackPage">
+                <property name="name">album</property>
+                <property name="title" translatable="yes">_Album</property>
+                <property name="use-underline">True</property>
+                <property name="icon-name">folder-symbolic</property>
+                <property name="child">
+                  <object class="GtkLabel">
+                    <property name="label">Album</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <style>
+                      <class name="title-1"/>
+                    </style>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwViewStackPage">
+                <property name="name">other</property>
+                <property name="title" translatable="yes">_Other</property>
+                <property name="use-underline">True</property>
+                <property name="icon-name">view-more-horizontal-symbolic</property>
+                <property name="child">
+                  <object class="GtkLabel">
+                    <property name="label">Other</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <style>
+                      <class name="title-1"/>
+                    </style>
+                  </object>
+                </property>
+              </object>
+            </child>
           </object>
         </property>
+
+        <child type="bottom">
+          <object class="AdwViewSwitcherBar" id="sidebar_switcher">
+            <property name="stack">stack_main</property>
+            <property name="reveal">False</property>
+          </object>
+        </child>
       </object>
     </property>
   </template>
+
   <menu id="primary_menu">
     <section>
       <item>

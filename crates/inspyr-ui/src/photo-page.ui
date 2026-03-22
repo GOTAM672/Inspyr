@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.0"/>
+  <template class="InspyrPhotoPage" parent="AdwBin">
+    <child>
+      <object class="GtkScrolledWindow">
+        <property name="vscrollbar-policy">automatic</property>
+        <property name="hscrollbar-policy">never</property>
+        <property name="propagate-natural-height">True</property>
+        <property name="child">
+          <object class="GtkGridView" id="grid_view">
+          </object>
+        </property>
+      </object>
+    </child>
+  </template>
+</interface>

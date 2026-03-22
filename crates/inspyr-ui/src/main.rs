@@ -20,6 +20,8 @@
 
 mod application;
 mod config;
+mod photo_item;
+mod photo_page;
 mod window;
 
 use self::application::InspyrApplication;

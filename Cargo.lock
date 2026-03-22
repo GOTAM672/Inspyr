@@ -614,6 +614,7 @@ name = "inspyr-ui"
 version = "0.1.0"
 dependencies = [
  "gettext-rs",
+ "glib-macros 0.21.5",
  "gtk4",
  "inspyr-database",
  "libadwaita",
