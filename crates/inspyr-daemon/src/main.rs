@@ -50,7 +50,9 @@ fn main() {
     // println!("Image: {:?}", image3);
 
 
-    FileWatcher::start_watcher(&db.get_scan_dir()).unwrap();
+    FileWatcher::new()
+        .start_watcher(&db.get_scan_dir())
+        .unwrap();
 
     main_loop.run();
 }

@@ -21,7 +21,7 @@
  use adw::prelude::*;
  use adw::subclass::prelude::*;
  use glib_macros::Properties;
- use gtk::{gio, glib, CompositeTemplate};
+ use gtk::{glib, CompositeTemplate};
  use std::cell::Cell;
  use std::path::Path;
   
@@ -78,5 +78,23 @@
  impl InspyrPhotoItem {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Show the image at `path`, or fall back to the loading icon if missing / invalid.
+    pub fn load_from_path(&self, path: &Path) {
+        let imp = imp::InspyrPhotoItem::from_obj(self);
+        let image = imp.icon.get();
+        if path.exists() {
+            image.set_from_file(Some(path));
+        } else {
+            image.set_icon_name(Some("image-missing-symbolic"));
+        }
+    }
+
+    pub fn clear_thumbnail(&self) {
+        let imp = imp::InspyrPhotoItem::from_obj(self);
+        let image = imp.icon.get();
+        image.clear();
+        image.set_icon_name(Some("image-loading-symbolic"));
     }
  }

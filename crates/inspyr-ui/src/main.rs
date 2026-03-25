@@ -20,6 +20,7 @@
 
 mod application;
 mod config;
+mod image_row;
 mod photo_item;
 mod photo_page;
 mod window;

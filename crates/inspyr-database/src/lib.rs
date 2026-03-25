@@ -7,5 +7,7 @@ mod scan;
 
 pub use connection::Database;
 pub use operation::DatabaseOperations;
+pub use operation::Image;
 pub use operation::InsertImage;
+pub use operation::ListOptions;
 pub use scan::Scan;

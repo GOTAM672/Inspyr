@@ -10,9 +10,15 @@
         <property name="propagate-natural-height">True</property>
         <property name="child">
           <object class="GtkGridView" id="grid_view">
+            <property name="factory">item_factory</property>
           </object>
         </property>
       </object>
     </child>
   </template>
+  <object class="GtkSignalListItemFactory" id="item_factory">
+    <signal name="setup" handler="on_item_setup" swapped="true"/>
+    <signal name="bind" handler="on_item_bind" swapped="true"/>
+    <signal name="unbind" handler="on_item_unbind" swapped="true"/>
+  </object>
 </interface>
