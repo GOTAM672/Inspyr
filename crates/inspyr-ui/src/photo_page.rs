@@ -143,6 +143,11 @@ impl InspyrPhotoPage {
             .sync_create()
             .build();
 
+        let s = self.icon_size();
+        if s > 0 {
+            photo_item.set_size_request(s as i32, s as i32);
+        }
+
         list_item.set_child(Some(&photo_item));
     }
 

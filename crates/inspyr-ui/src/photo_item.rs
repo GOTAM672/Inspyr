@@ -18,83 +18,97 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
- use adw::prelude::*;
- use adw::subclass::prelude::*;
- use glib_macros::Properties;
- use gtk::{glib, CompositeTemplate};
- use std::cell::Cell;
- use std::path::Path;
-  
- mod imp {
-     use super::*;
- 
-     #[derive(Debug, Default, CompositeTemplate, Properties)]
-     #[template(resource = "/org/gnome/Inspyr/photo-item.ui")]
-     #[properties(wrapper_type = super::InspyrPhotoItem)]
-     pub struct InspyrPhotoItem {
-         #[template_child]
-         pub icon: TemplateChild<gtk::Image>,
- 
-         #[property(get, set)]
-         icon_size: Cell<u32>,
-     }
-  
-      #[glib::object_subclass]
-      impl ObjectSubclass for InspyrPhotoItem {
-          const NAME: &'static str = "InspyrPhotoItem";
-          type Type = super::InspyrPhotoItem;
-          type ParentType = adw::Bin;
-  
-         fn class_init(klass: &mut Self::Class) {
-             klass.bind_template();
-         }
-  
-          fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
-              obj.init_template();
-          }
-      }
-  
-     #[glib::derived_properties]
-     impl ObjectImpl for InspyrPhotoItem {
-         fn constructed(&self) {
-             self.parent_constructed();
-         }
-     }
-     impl WidgetImpl for InspyrPhotoItem {}
-     impl BinImpl for InspyrPhotoItem {}
- }
- 
- glib::wrapper! {
-     pub struct InspyrPhotoItem(ObjectSubclass<imp::InspyrPhotoItem>)
-         @extends gtk::Widget, adw::Bin;
- }
+use adw::prelude::*;
+use adw::subclass::prelude::*;
+use glib_macros::Properties;
+use gtk::gio;
+use gtk::{glib, CompositeTemplate};
+use std::cell::Cell;
+use std::path::Path;
 
- impl Default for InspyrPhotoItem {
+mod imp {
+    use super::*;
+
+    #[derive(Debug, Default, CompositeTemplate, Properties)]
+    #[template(resource = "/org/gnome/Inspyr/photo-item.ui")]
+    #[properties(wrapper_type = super::InspyrPhotoItem)]
+    pub struct InspyrPhotoItem {
+        #[template_child]
+        pub picture: TemplateChild<gtk::Picture>,
+
+        #[property(get, set)]
+        icon_size: Cell<u32>,
+    }
+
+    #[glib::object_subclass]
+    impl ObjectSubclass for InspyrPhotoItem {
+        const NAME: &'static str = "InspyrPhotoItem";
+        type Type = super::InspyrPhotoItem;
+        type ParentType = adw::Bin;
+
+        fn class_init(klass: &mut Self::Class) {
+            klass.bind_template();
+        }
+
+        fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
+            obj.init_template();
+        }
+    }
+
+    #[glib::derived_properties]
+    impl ObjectImpl for InspyrPhotoItem {
+        fn constructed(&self) {
+            self.parent_constructed();
+            let obj = self.obj();
+            obj.connect_icon_size_notify(gtk::glib::clone!(
+                #[weak]
+                obj,
+                move |_| {
+                    let s = obj.icon_size();
+                    if s > 0 {
+                        obj.set_size_request(s as i32, s as i32);
+                    }
+                }
+            ));
+            let s = obj.icon_size();
+            if s > 0 {
+                obj.set_size_request(s as i32, s as i32);
+            }
+        }
+    }
+    impl WidgetImpl for InspyrPhotoItem {}
+    impl BinImpl for InspyrPhotoItem {}
+}
+
+glib::wrapper! {
+    pub struct InspyrPhotoItem(ObjectSubclass<imp::InspyrPhotoItem>)
+        @extends gtk::Widget, adw::Bin;
+}
+
+impl Default for InspyrPhotoItem {
     fn default() -> Self {
         glib::Object::new::<Self>()
     }
- }
-  
- impl InspyrPhotoItem {
+}
+
+impl InspyrPhotoItem {
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Show the image at `path`, or fall back to the loading icon if missing / invalid.
+    /// Show the image at `path`, or clear the tile if missing / invalid.
     pub fn load_from_path(&self, path: &Path) {
         let imp = imp::InspyrPhotoItem::from_obj(self);
-        let image = imp.icon.get();
+        let picture = imp.picture.get();
         if path.exists() {
-            image.set_from_file(Some(path));
+            picture.set_file(Some(&gio::File::for_path(path)));
         } else {
-            image.set_icon_name(Some("image-missing-symbolic"));
+            picture.set_file(None::<&gio::File>);
         }
     }
 
     pub fn clear_thumbnail(&self) {
         let imp = imp::InspyrPhotoItem::from_obj(self);
-        let image = imp.icon.get();
-        image.clear();
-        image.set_icon_name(Some("image-loading-symbolic"));
+        imp.picture.get().set_file(None::<&gio::File>);
     }
- }
+}
