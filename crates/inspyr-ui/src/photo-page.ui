@@ -3,19 +3,98 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="libadwaita" version="1.0"/>
   <template class="InspyrPhotoPage" parent="AdwBin">
-    <child>
-      <object class="GtkScrolledWindow">
-        <property name="vscrollbar-policy">automatic</property>
-        <property name="hscrollbar-policy">never</property>
-        <property name="propagate-natural-height">True</property>
-        <property name="child">
-          <object class="GtkGridView" id="grid_view">
-            <property name="factory">item_factory</property>
+    <property name="child">
+      <object class="GtkStack" id="view_stack">
+        <property name="hexpand">True</property>
+        <property name="vexpand">True</property>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">thumbnail_view</property>
+            <property name="child">
+              <object class="GtkScrolledWindow">
+                <property name="vscrollbar-policy">automatic</property>
+                <property name="hscrollbar-policy">never</property>
+                <property name="propagate-natural-height">True</property>
+                <property name="child">
+                  <object class="GtkGridView" id="grid_view">
+                    <property name="model">single_selection</property>
+                    <property name="factory">item_factory</property>
+                    <signal name="activate" handler="on_activate" swapped="true"/>
+                  </object>
+                </property>
+              </object>
+            </property>
           </object>
-        </property>
+        </child>
+        <child>
+          <object class="GtkStackPage">
+            <property name="name">photo_view</property>
+            <property name="child">
+              <object class="GtkBox" id="viewer_root">
+                <property name="orientation">vertical</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <property name="focusable">True</property>
+                <child>
+                  <object class="GtkOverlay">
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <child>
+                      <object class="GtkPicture" id="viewer_picture">
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="content-fit">contain</property>
+                        <property name="can-shrink">True</property>
+                      </object>
+                    </child>
+                    <child type="overlay">
+                      <object class="GtkButton" id="viewer_close_button">
+                        <property name="icon-name">window-close-symbolic</property>
+                        <property name="halign">end</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">8</property>
+                        <property name="margin-end">8</property>
+                        <property name="tooltip-text" translatable="yes">Close</property>
+                        <style>
+                          <class name="osd"/>
+                          <class name="circular"/>
+                        </style>
+                        <signal name="clicked" handler="on_viewer_close_clicked" swapped="true"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">12</property>
+                    <property name="halign">center</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-bottom">12</property>
+                    <child>
+                      <object class="GtkButton" id="viewer_prev_button">
+                        <property name="icon-name">go-previous-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Previous photo</property>
+                        <signal name="clicked" handler="on_viewer_prev_clicked" swapped="true"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="viewer_next_button">
+                        <property name="icon-name">go-next-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Next photo</property>
+                        <signal name="clicked" handler="on_viewer_next_clicked" swapped="true"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
       </object>
-    </child>
+    </property>
   </template>
+  <object class="GtkSingleSelection" id="single_selection"/>
   <object class="GtkSignalListItemFactory" id="item_factory">
     <signal name="setup" handler="on_item_setup" swapped="true"/>
     <signal name="bind" handler="on_item_bind" swapped="true"/>

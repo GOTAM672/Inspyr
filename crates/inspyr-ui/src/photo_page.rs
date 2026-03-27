@@ -23,6 +23,7 @@ use crate::photo_item::InspyrPhotoItem;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use glib_macros::Properties;
+use gtk::gio::prelude::ListModelExt;
 use gtk::{gio, glib, CompositeTemplate};
 use inspyr_database::{Database, DatabaseOperations, ListOptions};
 use std::cell::{Cell, RefCell};
@@ -38,13 +39,27 @@ mod imp {
     #[properties(wrapper_type = super::InspyrPhotoPage)]
     pub struct InspyrPhotoPage {
         #[template_child]
+        pub view_stack: TemplateChild<gtk::Stack>,
+        #[template_child]
         pub grid_view: TemplateChild<gtk::GridView>,
+        #[template_child]
+        pub single_selection: TemplateChild<gtk::SingleSelection>,
+        #[template_child]
+        pub viewer_root: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub viewer_picture: TemplateChild<gtk::Picture>,
+        #[template_child]
+        pub viewer_prev_button: TemplateChild<gtk::Button>,
+        #[template_child]
+        pub viewer_next_button: TemplateChild<gtk::Button>,
 
         #[property(get, set)]
         icon_size: Cell<u32>,
 
         /// Keeps the list model alive while the grid is shown.
         pub store: RefCell<Option<gio::ListStore>>,
+        /// Index into `store` when `photo_view` is visible.
+        pub viewer_index: Cell<u32>,
     }
 
     #[glib::object_subclass]
@@ -72,6 +87,7 @@ mod imp {
             let obj = self.obj();
             obj.setup_gsettings();
             obj.load_images_from_database();
+            obj.setup_photo_viewer_interaction();
         }
     }
     impl WidgetImpl for InspyrPhotoPage {}
@@ -133,6 +149,141 @@ impl InspyrPhotoPage {
         photo_item.clear_thumbnail();
     }
 
+    #[template_callback]
+    fn on_activate(&self, position: u32, _grid_view: gtk::GridView) {
+        self.open_photo_viewer_at(position);
+    }
+
+    #[template_callback]
+    fn on_viewer_close_clicked(&self, _button: gtk::Button) {
+        self.close_photo_viewer();
+    }
+
+    #[template_callback]
+    fn on_viewer_prev_clicked(&self, _button: gtk::Button) {
+        self.step_viewer(-1);
+    }
+
+    #[template_callback]
+    fn on_viewer_next_clicked(&self, _button: gtk::Button) {
+        self.step_viewer(1);
+    }
+
+    fn setup_photo_viewer_interaction(&self) {
+        let imp = self.imp();
+        let swipe = gtk::GestureSwipe::new();
+        swipe.set_propagation_phase(gtk::PropagationPhase::Capture);
+        swipe.connect_swipe(glib::clone!(
+            #[weak(rename_to = page)]
+            self,
+            move |_, vx, _vy| {
+                const THRESH: f64 = 500.0;
+                if vx > THRESH {
+                    page.step_viewer(-1);
+                } else if vx < -THRESH {
+                    page.step_viewer(1);
+                }
+            }
+        ));
+        imp.viewer_picture.add_controller(swipe);
+
+        let keys = gtk::EventControllerKey::new();
+        keys.connect_key_pressed(glib::clone!(
+            #[weak(rename_to = page)]
+            self,
+            #[upgrade_or_else]
+            || glib::Propagation::Proceed,
+            move |_ec, key, _, _| {
+                if key == gtk::gdk::Key::Escape {
+                    page.close_photo_viewer();
+                    glib::Propagation::Stop
+                } else {
+                    glib::Propagation::Proceed
+                }
+            }
+        ));
+        imp.viewer_root.add_controller(keys);
+    }
+
+    fn open_photo_viewer_at(&self, index: u32) {
+        let imp = self.imp();
+        let Some(store) = imp.store.borrow().clone() else {
+            return;
+        };
+        if store.n_items() == 0 || index >= store.n_items() {
+            return;
+        }
+        imp.viewer_index.set(index);
+        imp.single_selection.set_selected(index);
+        self.reload_viewer_picture();
+        self.update_viewer_nav_buttons();
+        imp.view_stack
+            .set_visible_child_full("photo_view", gtk::StackTransitionType::Crossfade);
+        imp.viewer_root.grab_focus();
+    }
+
+    fn close_photo_viewer(&self) {
+        let imp = self.imp();
+        imp.viewer_picture.set_file(None::<&gio::File>);
+        imp.view_stack
+            .set_visible_child_full("thumbnail_view", gtk::StackTransitionType::Crossfade);
+    }
+
+    fn step_viewer(&self, delta: i32) {
+        let imp = self.imp();
+        let Some(store) = imp.store.borrow().clone() else {
+            return;
+        };
+        let n = store.n_items();
+        if n == 0 {
+            return;
+        }
+        let i = imp.viewer_index.get() as i64 + delta as i64;
+        if i < 0 || i >= n as i64 {
+            return;
+        }
+        let new_i = i as u32;
+        imp.viewer_index.set(new_i);
+        imp.single_selection.set_selected(new_i);
+        self.reload_viewer_picture();
+        self.update_viewer_nav_buttons();
+    }
+
+    fn reload_viewer_picture(&self) {
+        let imp = self.imp();
+        let picture = imp.viewer_picture.get();
+        let Some(store) = imp.store.borrow().clone() else {
+            picture.set_file(None::<&gio::File>);
+            return;
+        };
+        let idx = imp.viewer_index.get();
+        let Some(obj) = store.item(idx) else {
+            picture.set_file(None::<&gio::File>);
+            return;
+        };
+        let Some(row) = obj.downcast_ref::<InspyrImageRow>() else {
+            picture.set_file(None::<&gio::File>);
+            return;
+        };
+        let path = PathBuf::from(row.path());
+        if path.exists() {
+            picture.set_file(Some(&gio::File::for_path(&path)));
+        } else {
+            picture.set_file(None::<&gio::File>);
+        }
+    }
+
+    fn update_viewer_nav_buttons(&self) {
+        let imp = self.imp();
+        let Some(store) = imp.store.borrow().clone() else {
+            return;
+        };
+        let n = store.n_items();
+        let i = imp.viewer_index.get();
+        imp.viewer_prev_button.set_sensitive(i > 0);
+        imp.viewer_next_button.set_sensitive(i + 1 < n);
+    }
+
     fn load_images_from_database(&self) {
         let db = match Database::init() {
             Ok(db) => db,
@@ -171,8 +322,7 @@ impl InspyrPhotoPage {
             offset = offset.saturating_add(1000);
         }
 
-        let selection = gtk::NoSelection::new(Some(store.clone()));
-        self.imp().grid_view.set_model(Some(&selection));
+        self.imp().single_selection.set_model(Some(&store));
         *self.imp().store.borrow_mut() = Some(store);
     }
 
