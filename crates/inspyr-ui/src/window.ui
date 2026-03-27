@@ -71,7 +71,7 @@
                 <property name="use-underline">True</property>
                 <property name="icon-name">folder-pictures-symbolic</property>
                 <property name="child">
-                  <object class="InspyrPhotoPage"/>
+                  <object class="InspyrPhotoPage" id="photo_page"/>
                 </property>
               </object>
             </child>

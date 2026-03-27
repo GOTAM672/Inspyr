@@ -155,11 +155,6 @@ impl InspyrPhotoPage {
     }
 
     #[template_callback]
-    fn on_viewer_close_clicked(&self, _button: gtk::Button) {
-        self.close_photo_viewer();
-    }
-
-    #[template_callback]
     fn on_viewer_prev_clicked(&self, _button: gtk::Button) {
         self.step_viewer(-1);
     }
@@ -222,11 +217,15 @@ impl InspyrPhotoPage {
         imp.viewer_root.grab_focus();
     }
 
-    fn close_photo_viewer(&self) {
+    pub fn close_photo_viewer(&self) {
         let imp = self.imp();
         imp.viewer_picture.set_file(None::<&gio::File>);
         imp.view_stack
             .set_visible_child_full("thumbnail_view", gtk::StackTransitionType::Crossfade);
+    }
+
+    pub fn view_stack(&self) -> gtk::Stack {
+        self.imp().view_stack.get()
     }
 
     fn step_viewer(&self, delta: i32) {

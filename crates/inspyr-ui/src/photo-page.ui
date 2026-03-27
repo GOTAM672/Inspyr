@@ -48,40 +48,30 @@
                       </object>
                     </child>
                     <child type="overlay">
-                      <object class="GtkButton" id="viewer_close_button">
-                        <property name="icon-name">window-close-symbolic</property>
-                        <property name="halign">end</property>
-                        <property name="valign">start</property>
-                        <property name="margin-top">8</property>
-                        <property name="margin-end">8</property>
-                        <property name="tooltip-text" translatable="yes">Close</property>
+                      <object class="GtkButton" id="viewer_prev_button">
+                        <property name="icon-name">go-previous-symbolic</property>
+                        <property name="halign">start</property>
+                        <property name="valign">center</property>
+                        <property name="margin-start">12</property>
+                        <property name="tooltip-text" translatable="yes">Previous photo</property>
                         <style>
                           <class name="osd"/>
                           <class name="circular"/>
                         </style>
-                        <signal name="clicked" handler="on_viewer_close_clicked" swapped="true"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkBox">
-                    <property name="orientation">horizontal</property>
-                    <property name="spacing">12</property>
-                    <property name="halign">center</property>
-                    <property name="margin-top">12</property>
-                    <property name="margin-bottom">12</property>
-                    <child>
-                      <object class="GtkButton" id="viewer_prev_button">
-                        <property name="icon-name">go-previous-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Previous photo</property>
                         <signal name="clicked" handler="on_viewer_prev_clicked" swapped="true"/>
                       </object>
                     </child>
-                    <child>
+                    <child type="overlay">
                       <object class="GtkButton" id="viewer_next_button">
                         <property name="icon-name">go-next-symbolic</property>
+                        <property name="halign">end</property>
+                        <property name="valign">center</property>
+                        <property name="margin-end">12</property>
                         <property name="tooltip-text" translatable="yes">Next photo</property>
+                        <style>
+                          <class name="osd"/>
+                          <class name="circular"/>
+                        </style>
                         <signal name="clicked" handler="on_viewer_next_clicked" swapped="true"/>
                       </object>
                     </child>
