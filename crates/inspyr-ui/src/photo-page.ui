@@ -77,6 +77,24 @@
                     </child>
                   </object>
                 </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="strip_scrolled">
+                    <property name="vexpand">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="vscrollbar-policy">never</property>
+                    <property name="hscrollbar-policy">automatic</property>
+                    <property name="propagate-natural-height">False</property>
+                    <child>
+                      <object class="GtkListView" id="strip_list">
+                        <property name="model">single_selection</property>
+                        <property name="factory">strip_item_factory</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="single-click-activate">True</property>
+                        <signal name="activate" handler="on_strip_activate" swapped="true"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
             </property>
           </object>
@@ -89,5 +107,10 @@
     <signal name="setup" handler="on_item_setup" swapped="true"/>
     <signal name="bind" handler="on_item_bind" swapped="true"/>
     <signal name="unbind" handler="on_item_unbind" swapped="true"/>
+  </object>
+  <object class="GtkSignalListItemFactory" id="strip_item_factory">
+    <signal name="setup" handler="on_strip_item_setup" swapped="true"/>
+    <signal name="bind" handler="on_strip_item_bind" swapped="true"/>
+    <signal name="unbind" handler="on_strip_item_unbind" swapped="true"/>
   </object>
 </interface>

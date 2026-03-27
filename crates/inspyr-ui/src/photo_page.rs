@@ -24,12 +24,24 @@ use adw::prelude::*;
 use adw::subclass::prelude::*;
 use glib_macros::Properties;
 use gtk::gio::prelude::ListModelExt;
-use gtk::{gio, glib, CompositeTemplate};
+use gtk::{gio, glib, CompositeTemplate, ListScrollFlags};
 use inspyr_database::{Database, DatabaseOperations, ListOptions};
 use std::cell::{Cell, RefCell};
 use std::path::PathBuf;
 
 const LOG_DOMAIN: &str = "InspyrPhotoPage";
+/// Square strip cell edge length; `GtkPicture` uses cover so pixels fill the selection outline.
+const STRIP_THUMB_SIZE: u32 = 32;
+
+/// Square strip cell; no outer margins so list selection/focus matches the image bounds.
+fn strip_cell_extent() -> i32 {
+    STRIP_THUMB_SIZE as i32
+}
+
+/// Scrolled strip height: cell row plus space for the horizontal scrollbar when shown.
+fn strip_scrolled_height_request() -> i32 {
+    strip_cell_extent() + (STRIP_THUMB_SIZE as i32 / 4).max(12)
+}
 
 mod imp {
     use super::*;
@@ -52,6 +64,10 @@ mod imp {
         pub viewer_prev_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub viewer_next_button: TemplateChild<gtk::Button>,
+        #[template_child]
+        pub strip_list: TemplateChild<gtk::ListView>,
+        #[template_child]
+        pub strip_scrolled: TemplateChild<gtk::ScrolledWindow>,
 
         #[property(get, set)]
         icon_size: Cell<u32>,
@@ -86,6 +102,7 @@ mod imp {
             self.parent_constructed();
             let obj = self.obj();
             obj.setup_gsettings();
+            obj.apply_strip_shell_geometry();
             obj.load_images_from_database();
             obj.setup_photo_viewer_interaction();
         }
@@ -109,6 +126,12 @@ impl Default for InspyrPhotoPage {
 impl InspyrPhotoPage {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    fn apply_strip_shell_geometry(&self) {
+        self.imp()
+            .strip_scrolled
+            .set_height_request(strip_scrolled_height_request());
     }
 
     #[template_callback]
@@ -152,6 +175,57 @@ impl InspyrPhotoPage {
     #[template_callback]
     fn on_activate(&self, position: u32, _grid_view: gtk::GridView) {
         self.open_photo_viewer_at(position);
+    }
+
+    #[template_callback]
+    fn on_strip_activate(&self, position: u32, _list_view: gtk::ListView) {
+        self.open_photo_viewer_at(position);
+    }
+
+    #[template_callback]
+    fn on_strip_item_setup(&self, object: glib::Object) {
+        let list_item = object.downcast_ref::<gtk::ListItem>().unwrap();
+        let cell = strip_cell_extent();
+        let pic = gtk::Picture::builder()
+            .content_fit(gtk::ContentFit::Cover)
+            .can_shrink(true)
+            .halign(gtk::Align::Fill)
+            .valign(gtk::Align::Fill)
+            .hexpand(true)
+            .vexpand(true)
+            .build();
+        pic.set_size_request(cell, cell);
+        list_item.set_child(Some(&pic));
+    }
+
+    #[template_callback]
+    fn on_strip_item_bind(&self, object: glib::Object) {
+        let list_item = object.downcast_ref::<gtk::ListItem>().unwrap();
+        let Some(gobj) = list_item.item() else {
+            return;
+        };
+        let Some(item) = gobj.downcast_ref::<InspyrImageRow>() else {
+            return;
+        };
+        let widget = list_item.child().unwrap();
+        let pic = widget.downcast_ref::<gtk::Picture>().unwrap();
+
+        let path = PathBuf::from(item.path());
+        if path.exists() {
+            pic.set_file(Some(&gio::File::for_path(&path)));
+        } else {
+            pic.set_file(None::<&gio::File>);
+        }
+    }
+
+    #[template_callback]
+    fn on_strip_item_unbind(&self, object: glib::Object) {
+        let list_item = object.downcast_ref::<gtk::ListItem>().unwrap();
+        let Some(widget) = list_item.child() else {
+            return;
+        };
+        let pic = widget.downcast_ref::<gtk::Picture>().unwrap();
+        pic.set_file(None::<&gio::File>);
     }
 
     #[template_callback]
@@ -215,6 +289,7 @@ impl InspyrPhotoPage {
         imp.view_stack
             .set_visible_child_full("photo_view", gtk::StackTransitionType::Crossfade);
         imp.viewer_root.grab_focus();
+        self.scroll_strip_to_index(index);
     }
 
     pub fn close_photo_viewer(&self) {
@@ -246,6 +321,55 @@ impl InspyrPhotoPage {
         imp.single_selection.set_selected(new_i);
         self.reload_viewer_picture();
         self.update_viewer_nav_buttons();
+        self.scroll_strip_to_index(new_i);
+    }
+
+    fn scroll_strip_to_index(&self, index: u32) {
+        let list = self.imp().strip_list.get();
+        list.scroll_to(index, ListScrollFlags::FOCUS, None);
+
+        let page = self.clone();
+        glib::idle_add_local(move || {
+            page.center_strip_thumb(index);
+            glib::ControlFlow::Break
+        });
+    }
+
+    /// Places the thumbnail for `index` at the horizontal center of the strip viewport.
+    fn center_strip_thumb(&self, index: u32) {
+        let imp = self.imp();
+        let Some(store) = imp.store.borrow().clone() else {
+            return;
+        };
+        let n = store.n_items();
+        if n == 0 || index >= n {
+            return;
+        }
+
+        let list = imp.strip_list.get();
+        let Some(hadj) = list.hadjustment() else {
+            return;
+        };
+        let lower = hadj.lower();
+        let upper = hadj.upper();
+        let page_size = hadj.page_size();
+
+        if page_size <= f64::EPSILON {
+            return;
+        }
+
+        // `upper - lower` spans the full content width; each cell gets an equal share.
+        let span = upper - lower;
+        if span <= page_size {
+            hadj.set_value(lower);
+            return;
+        }
+
+        let cell = span / f64::from(n);
+        let center = f64::from(index) * cell + cell / 2.0;
+        let max_val = (upper - page_size).max(lower);
+        let value = (center - page_size / 2.0).clamp(lower, max_val);
+        hadj.set_value(value);
     }
 
     fn reload_viewer_picture(&self) {
