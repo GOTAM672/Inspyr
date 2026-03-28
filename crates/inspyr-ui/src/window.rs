@@ -91,11 +91,12 @@ impl InspyrWindow {
             self,
             move |_| win.sync_search_button_with_photo_viewer()
         ));
-        imp.stack_main.connect_visible_child_name_notify(glib::clone!(
-            #[weak(rename_to = win)]
-            self,
-            move |_| win.sync_search_button_with_photo_viewer()
-        ));
+        imp.stack_main
+            .connect_visible_child_name_notify(glib::clone!(
+                #[weak(rename_to = win)]
+                self,
+                move |_| win.sync_search_button_with_photo_viewer()
+            ));
         imp.search_button.connect_toggled(glib::clone!(
             #[weak(rename_to = win)]
             self,
@@ -118,11 +119,7 @@ impl InspyrWindow {
         if imp.stack_main.visible_child_name().as_deref() != Some("photos") {
             return false;
         }
-        imp.photo_page
-            .view_stack()
-            .visible_child_name()
-            .as_deref()
-            == Some("photo_view")
+        imp.photo_page.view_stack().visible_child_name().as_deref() == Some("photo_view")
     }
 
     fn sync_search_button_with_photo_viewer(&self) {

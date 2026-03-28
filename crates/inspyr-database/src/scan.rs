@@ -29,11 +29,7 @@ impl<'a> Scan<'a> {
         {
             if entry.file_type().is_file() && Self::is_image_file(entry.path()) {
                 let path_buf = entry.path().to_path_buf();
-                let filename = entry
-                    .file_name()
-                    .to_str()
-                    .unwrap_or("")
-                    .to_string();
+                let filename = entry.file_name().to_str().unwrap_or("").to_string();
                 ops.insert(&InsertImage {
                     path: path_buf,
                     filename,
@@ -49,7 +45,6 @@ impl<'a> Scan<'a> {
         self.initial_scan(path)
     }
 
-
     /// Skip hidden files and directories (name starts with `.`). Used so we don't descend into hidden dirs.
     fn is_hidden_entry(entry: &DirEntry) -> bool {
         entry
@@ -62,11 +57,7 @@ impl<'a> Scan<'a> {
     fn is_image_file(path: &Path) -> bool {
         path.extension()
             .and_then(|ext| ext.to_str())
-            .map(|ext| {
-                IMAGE_EXTENSIONS
-                    .iter()
-                    .any(|e| e.eq_ignore_ascii_case(ext))
-            })
+            .map(|ext| IMAGE_EXTENSIONS.iter().any(|e| e.eq_ignore_ascii_case(ext)))
             .unwrap_or(false)
     }
 }

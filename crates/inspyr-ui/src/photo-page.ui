@@ -17,6 +17,9 @@
                 <property name="propagate-natural-height">True</property>
                 <property name="child">
                   <object class="GtkGridView" id="grid_view">
+                    <property name="margin-start">10</property>
+                    <property name="margin-end">10</property>
+                    <property name="margin-top">8</property>
                     <property name="model">single_selection</property>
                     <property name="factory">item_factory</property>
                     <signal name="activate" handler="on_activate" swapped="true"/>
@@ -41,6 +44,9 @@
                     <property name="vexpand">True</property>
                     <child>
                       <object class="GtkPicture" id="viewer_picture">
+                        <property name="margin-start">5</property>
+                        <property name="margin-end">5</property>
+                        <property name="margin-top">5</property>
                         <property name="hexpand">True</property>
                         <property name="vexpand">True</property>
                         <property name="content-fit">contain</property>

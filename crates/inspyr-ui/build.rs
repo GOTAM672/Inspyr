@@ -25,5 +25,8 @@ fn main() {
         panic!("glib-compile-resources failed");
     }
 
-    println!("cargo:rustc-env=INSPYR_RESOURCE_DIR={}", env::var("OUT_DIR").unwrap());
+    println!(
+        "cargo:rustc-env=INSPYR_RESOURCE_DIR={}",
+        env::var("OUT_DIR").unwrap()
+    );
 }

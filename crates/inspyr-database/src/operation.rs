@@ -122,10 +122,16 @@ impl<'a> DatabaseOperations<'a> {
                 )?;
             }
             (Some(p), None) => {
-                conn.execute("UPDATE images SET path = ?1 WHERE id = ?2", rusqlite::params![p.to_string_lossy(), id])?;
+                conn.execute(
+                    "UPDATE images SET path = ?1 WHERE id = ?2",
+                    rusqlite::params![p.to_string_lossy(), id],
+                )?;
             }
             (None, Some(f)) => {
-                conn.execute("UPDATE images SET filename = ?1 WHERE id = ?2", rusqlite::params![f, id])?;
+                conn.execute(
+                    "UPDATE images SET filename = ?1 WHERE id = ?2",
+                    rusqlite::params![f, id],
+                )?;
             }
             (None, None) => {}
         }
@@ -151,9 +157,8 @@ impl<'a> DatabaseOperations<'a> {
     pub fn list(&self, opts: &ListOptions) -> Result<Vec<Image>> {
         let conn = self.db.get_conn();
         let limit = opts.limit.max(1).min(1000);
-        let mut stmt = conn.prepare(
-            "SELECT id, path, filename FROM images ORDER BY id LIMIT ?1 OFFSET ?2",
-        )?;
+        let mut stmt =
+            conn.prepare("SELECT id, path, filename FROM images ORDER BY id LIMIT ?1 OFFSET ?2")?;
         let rows = stmt.query_map([limit, opts.offset], row_to_image)?;
         rows.collect()
     }
@@ -200,14 +205,17 @@ impl<'a> DatabaseOperations<'a> {
             return Ok(0);
         }
         let conn = self.db.get_conn();
-        let placeholders = ids.iter().enumerate().map(|(i, _)| format!("?{}", i + 1)).collect::<Vec<_>>().join(", ");
+        let placeholders = ids
+            .iter()
+            .enumerate()
+            .map(|(i, _)| format!("?{}", i + 1))
+            .collect::<Vec<_>>()
+            .join(", ");
         let sql = format!("DELETE FROM images WHERE id IN ({})", placeholders);
         let mut stmt = conn.prepare(&sql)?;
         let n = stmt.execute(rusqlite::params_from_iter(ids.iter()))?;
         Ok(n)
     }
-
-        
 }
 
 fn row_to_image(row: &rusqlite::Row<'_>) -> Result<Image> {

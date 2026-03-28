@@ -1,9 +1,6 @@
 use glib::subclass::prelude::*;
 use notify::{Event, EventKind, RecursiveMode, Result, Watcher};
-use std::{
-    path::Path,
-    sync::mpsc,
-};
+use std::{path::Path, sync::mpsc};
 use walkdir::{DirEntry, WalkDir};
 
 mod imp {

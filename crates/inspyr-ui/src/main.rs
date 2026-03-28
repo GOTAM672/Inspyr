@@ -30,8 +30,8 @@ use self::window::InspyrWindow;
 
 use config::{GETTEXT_PACKAGE, LOCALEDIR};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
-use gtk::{gdk, gio, glib};
 use gtk::prelude::*;
+use gtk::{gdk, gio, glib};
 
 fn main() -> glib::ExitCode {
     let _ = gtk::init();
@@ -52,7 +52,6 @@ fn main() -> glib::ExitCode {
     let icon_theme = gtk::IconTheme::for_display(&display);
     gtk::IconTheme::add_resource_path(&icon_theme, "/org/gnome/Inspyr/icons");
 
-    let app =
-        InspyrApplication::new("org.gnome.Inspyr", &gio::ApplicationFlags::empty());
+    let app = InspyrApplication::new("org.gnome.Inspyr", &gio::ApplicationFlags::empty());
     app.run()
 }
