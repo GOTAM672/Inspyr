@@ -4,8 +4,9 @@
   <requires lib="Adw" version="1.0"/>
   <template class="InspyrWindow" parent="AdwApplicationWindow">
     <property name="title" translatable="yes">Inspyr</property>
-    <property name="default-width">800</property>
-    <property name="default-height">600</property>
+    <!-- ~phone portrait; under breakpoint max-width 550sp so narrow layout on first open -->
+    <property name="default-width">360</property>
+    <property name="default-height">680</property>
 
     <child>
       <object class="AdwBreakpoint">
